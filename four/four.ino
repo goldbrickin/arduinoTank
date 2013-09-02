@@ -9,9 +9,10 @@
 #define SERVOPIN 9
 #define LEFTTURN 1
 #define RIGHTTURN 0
+#define INCH 50
 
-AF_DCMotor motorR(3);
-AF_DCMotor motorL(4);
+AF_DCMotor motorL(3);
+AF_DCMotor motorR(4);
 
 LSM303 compass;
 
@@ -69,28 +70,14 @@ void loop() {
     } else if (val == 'c') {
       look('c');
     } else if (val == 'f') {
-      delay(10);
-      while (Serial.available() > 0)
-      {
-        Serial.println("tick");
-        if(index < 19) // One less than the size of the array
-        {
-          inChar = Serial.read(); // Read a character
-          inData[index] = inChar; // Store it
-          index++; // Increment where to write next
-          inData[index] = '\0'; // Null terminate the string
-        }
-      }
-      index = 0;
-      Serial.println(inData);
-      moveForward((int)inData);
+      moveForward(getIntSerialParameter());
     } else if (val == ',') {
-      turn(LEFTTURN, 95);
+      turn(LEFTTURN, getIntSerialParameter());
     } else if (val == '.') {
-      turn(RIGHTTURN, 95);
-    } else if (val == '3') {
+      turn(RIGHTTURN, getIntSerialParameter());
+    } else if (val == '1') {
       moveTrack('l');
-    } else if (val == '4') {
+    } else if (val == '2') {
       moveTrack('r');
     } 
   }
@@ -110,8 +97,8 @@ void getHeading() {
   compass.read();
   int heading = compass.heading((LSM303::vector){0,-1,0});
   currentHeading = heading;
-  Serial.println(heading);
-  delay(100);
+  //Serial.println(heading);
+  delay(10);
 }
 
 void look(char dir)
@@ -135,10 +122,7 @@ void turn(int turnDirection, float turnAngle)
   getHeading();
   
   float targetAngle, angleToleranceLow, angleToleranceHigh;
-  
-  motorL.setSpeed(200);
-  motorR.setSpeed(200);
-  
+
   switch(turnDirection) {
     case RIGHTTURN:
       targetAngle = adjustedHeading(currentHeading, turnAngle);
@@ -173,14 +157,11 @@ void turn(int turnDirection, float turnAngle)
       motorL.run(BACKWARD);
       motorR.run(FORWARD);
     }
-    delay(90);
+    delay(100);
     motorL.run(RELEASE);
     motorR.run(RELEASE); 
     getHeading();  
   }
-  
-  motorL.setSpeed(255);
-  motorR.setSpeed(255);
 }
 
 void resetInterrupt(char which)
@@ -203,7 +184,7 @@ void resetInterrupt(char which)
 void moveForward(int howFar)
 {
   resetInterrupt('b');
-  while (interruptCounterRight < howFar)
+  while (interruptCounterRight < (howFar * INCH))
   {
     motorL.run(FORWARD);
     motorR.run(FORWARD);
@@ -222,7 +203,7 @@ void moveForward(int howFar)
 
 void moveTrack(char leftOrRight)
 {
-  if (leftOrRight == 'l')
+  if (leftOrRight == 'r')
   {
     motorR.run(FORWARD);
     delay(1000);
@@ -285,4 +266,23 @@ boolean isBetweenAngles(float testAngle, float lowAngle, float highAngle)
     if ((testAngle > lowAngle && testAngle < 360) || (testAngle < highAngle)) return true;
   }
   return false;
+}
+
+int getIntSerialParameter()
+{
+  delay(10);
+  
+  while (Serial.available() > 0)
+  {
+    if(index < 19) // One less than the size of the array
+    {
+      inChar = Serial.read(); // Read a character
+      inData[index] = inChar; // Store it
+      index++; // Increment where to write next
+      inData[index] = '\0'; // Null terminate the string
+    }
+  }
+  index = 0;
+  
+  return atoi(inData);
 }
