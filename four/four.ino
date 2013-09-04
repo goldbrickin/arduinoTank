@@ -9,7 +9,6 @@
 #define SERVOPIN 9
 #define LEFTTURN 1
 #define RIGHTTURN 0
-#define INCH 50
 
 AF_DCMotor motorL(3);
 AF_DCMotor motorR(4);
@@ -31,6 +30,8 @@ byte index = 0; // Index into array; where to store the character
 
 int centerHeading, currentHeading;
 int interruptCounterLeft, interruptCounterRight;
+boolean calibrateVisibility = false;
+int interruptInch = 50;
 
 void setup() {
   // open the serial communication on 9600 baudrate
@@ -70,7 +71,9 @@ void loop() {
     } else if (val == 'c') {
       look('c');
     } else if (val == 'f') {
-      moveForward(getIntSerialParameter());
+      go('f', getIntSerialParameter());
+    } else if (val == 'b') {
+      go('b', getIntSerialParameter());
     } else if (val == ',') {
       turn(LEFTTURN, getIntSerialParameter());
     } else if (val == '.') {
@@ -181,22 +184,54 @@ void resetInterrupt(char which)
   }
 }
 
-void moveForward(int howFar)
+void go(char way, int howFar)
 {
   resetInterrupt('b');
-  while (interruptCounterRight < (howFar * INCH))
+  int startVisibility = (int)getDistance('i');
+  
+  while (interruptCounterRight < (howFar * interruptInch))
   {
-    motorL.run(FORWARD);
-    motorR.run(FORWARD);
-
-    delay(100);
+    if (way == 'b') 
+    {  
+      motorL.run(BACKWARD);
+      motorR.run(BACKWARD);
+    }
+    else
+    {
+      motorL.run(FORWARD);
+      motorR.run(FORWARD);
+    }
+    
+    delay(10);
   
     motorL.run(RELEASE);
     motorR.run(RELEASE); 
-    
-    Serial.println(interruptCounterRight);
-    Serial.println(howFar);
   }
+  
+  int finishVisibility = (int)getDistance('i');
+  
+  if (calibrateVisibility == true)
+  {
+    if (way == 'b')
+    {
+      interruptInch = interruptCounterRight / (finishVisibility - startVisibility);
+    }
+    else
+    {
+      interruptInch = interruptCounterRight / (startVisibility - finishVisibility);
+    }
+    
+    calibrateVisibility = false;
+  }
+    
+  Serial.print("Interrupts:  ");
+  Serial.println(interruptCounterRight);
+    
+  Serial.print("Distance calculated:  ");
+  Serial.println(howFar);
+  
+  Serial.print("Adjusted interrupt per inch:  ");
+  Serial.println(interruptInch);
   
   resetInterrupt('b');
 }
@@ -239,15 +274,15 @@ float getDistance(char unit)
   
   switch(unit) {
     case 'i':
-      Serial.print("Inches: ");
+      Serial.print("Visibility (in): ");
       distance = ping.inches();
       break;
     case 'c':
-      Serial.print("Centimeters: ");
+      Serial.print("Visibility (cm): ");
       distance = ping.centimeters();
       break;
     case 'm':
-      Serial.print("Microseconds: ");
+      Serial.print("Visibility (ms): ");
       distance = ping.microseconds();
       break;
   }
@@ -277,6 +312,11 @@ int getIntSerialParameter()
     if(index < 19) // One less than the size of the array
     {
       inChar = Serial.read(); // Read a character
+      if (inChar == 'c') 
+      {
+        calibrateVisibility = true;
+        inChar = Serial.read();
+      }
       inData[index] = inChar; // Store it
       index++; // Increment where to write next
       inData[index] = '\0'; // Null terminate the string
