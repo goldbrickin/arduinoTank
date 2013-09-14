@@ -82,6 +82,8 @@ void loop() {
       moveTrack('l');
     } else if (val == '2') {
       moveTrack('r');
+    } else if (val == 'p') {
+      playDixie();
     } 
   }
 }
@@ -119,6 +121,14 @@ void look(char dir)
     servo.write(90);
   }
 }
+
+boolean getObsacle()
+{
+  
+  
+  return false;
+}
+
 
 void turn(int turnDirection, float turnAngle)
 {
@@ -301,6 +311,45 @@ boolean isBetweenAngles(float testAngle, float lowAngle, float highAngle)
     if ((testAngle > lowAngle && testAngle < 360) || (testAngle < highAngle)) return true;
   }
   return false;
+}
+
+void playDixie() {
+  tone(A0, 392, 218);
+  delay(125);
+  noTone(A0);
+  tone(A0, 330, 218);
+  delay(125);
+  noTone(A0);
+  tone(A0, 262, 436);
+  delay(250);
+  noTone(A0);
+  tone(A0, 262, 436);
+  delay(250);
+  noTone(A0);
+  tone(A0, 262, 218);
+  delay(125);
+  noTone(A0);
+  tone(A0, 294, 218);
+  delay(125);
+  noTone(A0);
+  tone(A0, 330, 218);
+  delay(125);
+  noTone(A0);
+  tone(A0, 349, 218);
+  delay(125);
+  noTone(A0);
+  tone(A0, 392, 436);
+  delay(250);
+  noTone(A0);
+  tone(A0, 392, 436);
+  delay(250);
+  noTone(A0);
+  tone(A0, 392, 436);
+  delay(250);
+  noTone(A0);
+  tone(A0, 330, 436);
+  delay(250);
+  noTone(A0);  
 }
 
 int getIntSerialParameter()
