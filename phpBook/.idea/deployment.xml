@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="raspberryPi" createEmptyFolders="true">
+    <serverData>
+      <paths name="apache_kurt">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/phpBook" local="$PROJECT_DIR$" web="/phpBook" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="raspberryPi">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$" web="/command" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>
+
